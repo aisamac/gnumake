@@ -336,7 +336,6 @@ char *strsignal (int signum);
 # include <malloc.h>
 # define pipe(_p)        _pipe((_p), 512, O_BINARY)
 # define kill(_pid,_sig) w32_kill((_pid),(_sig))
-
 void sync_Path_environment (void);
 int w32_kill (pid_t pid, int sig);
 char *end_of_token_w32 (const char *s, char stopchar);

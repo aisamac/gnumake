@@ -67,7 +67,9 @@ void verify_file_data_base (void);
 #endif
 
 #ifndef	HAVE_UNISTD_H
+# ifndef _MSC_VER
 int chdir ();
+# endif
 #endif
 #ifndef	STDC_HEADERS
 # ifndef sun			/* Sun has an incorrect decl in a header.  */
@@ -866,7 +868,9 @@ msdos_return_to_initial_directory (void)
 }
 #endif  /* __MSDOS__ */
 
+# ifndef HAVE_MKTEMP
 char *mktemp (char *template);
+# endif
 int mkstemp (char *template);
 
 FILE *

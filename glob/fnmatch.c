@@ -121,7 +121,9 @@ USA.  */
    whose names are inconsistent.  */
 
 # if !defined _LIBC && !defined getenv
+#   ifndef _MSC_VER
 extern char *getenv ();
+#   endif
 # endif
 
 # ifndef errno

@@ -11,9 +11,7 @@
 #                         [-make <make prog>]
 #                        (and others)
 
-# Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-# 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
-# Foundation, Inc.
+# Copyright (C) 1992-2012 Free Software Foundation, Inc.
 # This file is part of GNU Make.
 #
 # GNU Make is free software; you can redistribute it and/or modify it under
@@ -33,7 +31,7 @@
 
 $valgrind = 0;              # invoke make with valgrind
 $valgrind_args = '';
-$memcheck_args = '--num-callers=15 --tool=memcheck --leak-check=full';
+$memcheck_args = '--num-callers=15 --tool=memcheck --leak-check=full --suppressions=guile.supp';
 $massif_args = '--num-callers=15 --tool=massif --alloc-fn=xmalloc --alloc-fn=xcalloc --alloc-fn=xrealloc --alloc-fn=xstrdup --alloc-fn=xstrndup';
 $pure_log = undef;
 
@@ -318,7 +316,7 @@ sub set_more_defaults
    $mk or die "FATAL ERROR: Cannot determine the value of \$(MAKE):\n
 'echo \"all:;\@echo \\\$(MAKE)\" | $make_path -f-' failed!\n";
    $make_path = $mk;
-   print "Make\t= `$make_path'\n" if $debug;
+   print "Make\t= '$make_path'\n" if $debug;
 
    $string = `$make_path -v -f /dev/null 2> /dev/null`;
 

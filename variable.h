@@ -1,7 +1,5 @@
 /* Definitions for using variables in GNU Make.
-Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
-1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010 Free Software Foundation, Inc.
+Copyright (C) 1988-2012 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -27,7 +25,7 @@ enum variable_origin
     o_file,		/* Variable given in a makefile.  */
     o_env_override,	/* Variable from environment, if -e.  */
     o_command,		/* Variable given by user.  */
-    o_override, 	/* Variable from an `override' directive.  */
+    o_override, 	/* Variable from an 'override' directive.  */
     o_automatic,	/* Automatic variable -- cannot be set.  */
     o_invalid		/* Core dump time.  */
   };
@@ -35,7 +33,7 @@ enum variable_origin
 enum variable_flavor
   {
     f_bogus,            /* Bogus (error) */
-    f_simple,           /* Simple definition (:=) */
+    f_simple,           /* Simple definition (:= or ::=) */
     f_recursive,        /* Recursive definition (=) */
     f_append,           /* Appending definition (+=) */
     f_conditional,      /* Conditional definition (?=) */
@@ -44,7 +42,7 @@ enum variable_flavor
 
 /* Structure that represents one variable definition.
    Each bucket of the hash table is a chain of these,
-   chained through `next'.  */
+   chained through 'next'.  */
 
 #define EXP_COUNT_BITS  15      /* This gets all the bitfields into 32 bits */
 #define EXP_COUNT_MAX   ((1<<EXP_COUNT_BITS)-1)
@@ -52,9 +50,9 @@ enum variable_flavor
 struct variable
   {
     char *name;			/* Variable name.  */
-    int length;			/* strlen (name) */
     char *value;		/* Variable value.  */
     struct floc fileinfo;       /* Where the variable was defined.  */
+    int length;			/* strlen (name) */
     unsigned int recursive:1;	/* Gets recursively re-evaluated.  */
     unsigned int append:1;	/* Nonzero if an appending target-specific
                                    variable.  */
@@ -160,13 +158,16 @@ struct variable *do_variable_definition (const struct floc *flocp,
                                          enum variable_flavor flavor,
                                          int target_var);
 char *parse_variable_definition (const char *line,
-                                 enum variable_flavor *flavor);
+                                 struct variable *v);
 struct variable *assign_variable_definition (struct variable *v, char *line);
 struct variable *try_variable_definition (const struct floc *flocp, char *line,
                                           enum variable_origin origin,
                                           int target_var);
 void init_hash_global_variable_set (void);
 void hash_init_function_table (void);
+void define_new_function(const struct floc *flocp,
+                         const char *name, int min, int max, int expand,
+                         char *(*func)(char *, char **, const char *));
 struct variable *lookup_variable (const char *name, unsigned int length);
 struct variable *lookup_variable_in_set (const char *name, unsigned int length,
                                          const struct variable_set *set);
@@ -220,7 +221,7 @@ void undefine_variable_in_set (const char *name, unsigned int length,
 #define warn_undefined(n,l) do{\
                               if (warn_undefined_variables_flag) \
                                 error (reading_file, \
-                                       _("warning: undefined variable `%.*s'"), \
+                                       _("warning: undefined variable '%.*s'"), \
                                 (int)(l), (n)); \
                               }while(0)
 
@@ -232,4 +233,4 @@ struct pattern_var *create_pattern_var (const char *target,
 extern int export_all_variables;
 
 #define MAKELEVEL_NAME "MAKELEVEL"
-#define MAKELEVEL_LENGTH (sizeof (MAKELEVEL_NAME) - 1)
+#define MAKELEVEL_LENGTH (CSTRLEN (MAKELEVEL_NAME))

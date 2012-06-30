@@ -1,7 +1,5 @@
 /* Internals of variables for GNU Make.
-Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
-1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010 Free Software Foundation, Inc.
+Copyright (C) 1988-2012 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -412,7 +410,7 @@ lookup_special_var (struct variable *var)
 
 /* Lookup a variable whose name is a string starting at NAME
    and with LENGTH chars.  NAME need not be null-terminated.
-   Returns address of the `struct variable' containing all info
+   Returns address of the 'struct variable' containing all info
    on the variable, or nil if no such variable is defined.  */
 
 struct variable *
@@ -499,7 +497,7 @@ lookup_variable (const char *name, unsigned int length)
 
 /* Lookup a variable whose name is a string starting at NAME
    and with LENGTH chars in set SET.  NAME need not be null-terminated.
-   Returns address of the `struct variable' containing all info
+   Returns address of the 'struct variable' containing all info
    on the variable, or nil if no such variable is defined.  */
 
 struct variable *
@@ -954,7 +952,7 @@ define_automatic_variables (void)
 int export_all_variables;
 
 /* Create a new environment for FILE's commands.
-   If FILE is nil, this is for the `shell' function.
+   If FILE is nil, this is for the 'shell' function.
    The child's MAKELEVEL variable is incremented.  */
 
 char **
@@ -1250,7 +1248,7 @@ do_variable_definition (const struct floc *flocp, const char *varname,
 #ifdef __MSDOS__
   /* Many Unix Makefiles include a line saying "SHELL=/bin/sh", but
      non-Unix systems don't conform to this default configuration (in
-     fact, most of them don't even have `/bin').  On the other hand,
+     fact, most of them don't even have '/bin').  On the other hand,
      $SHELL in the environment, if set, points to the real pathname of
      the shell.
      Therefore, we generally won't let lines like "SHELL=/bin/sh" from
@@ -1396,17 +1394,27 @@ do_variable_definition (const struct floc *flocp, const char *varname,
 
 /* Parse P (a null-terminated string) as a variable definition.
 
-   If it is not a variable definition, return NULL.
+   If it is not a variable definition, return NULL and the contents of *VAR
+   are undefined, except NAME is set to the first non-space character or NIL.
 
    If it is a variable definition, return a pointer to the char after the
-   assignment token and set *FLAVOR to the type of variable assignment.  */
+   assignment token and set the following fields (only) of *VAR:
+    name   : name of the variable (ALWAYS SET) (NOT NUL-TERMINATED!)
+    length : length of the variable name
+    value  : value of the variable (nul-terminated)
+    flavor : flavor of the variable
+   Other values in *VAR are unchanged.
+  */
 
 char *
-parse_variable_definition (const char *p, enum variable_flavor *flavor)
+parse_variable_definition (const char *p, struct variable *var)
 {
   int wspace = 0;
+  const char *e = NULL;
 
   p = next_token (p);
+  var->name = (char *)p;
+  var->length = 0;
 
   while (1)
     {
@@ -1451,6 +1459,7 @@ parse_variable_definition (const char *p, enum variable_flavor *flavor)
       if (isblank ((unsigned char)c))
         {
           wspace = 1;
+          e = p - 1;
           p = next_token (p);
           c = *p;
           if (c == '\0')
@@ -1461,8 +1470,10 @@ parse_variable_definition (const char *p, enum variable_flavor *flavor)
 
       if (c == '=')
 	{
-	  *flavor = f_recursive;
-	  return (char *)p;
+	  var->flavor = f_recursive;
+          if (! e)
+            e = p - 1;
+	  break;
 	}
 
       /* Match assignment variants (:=, +=, ?=, !=)  */
@@ -1471,16 +1482,16 @@ parse_variable_definition (const char *p, enum variable_flavor *flavor)
           switch (c)
             {
               case ':':
-                *flavor = f_simple;
+                var->flavor = f_simple;
                 break;
               case '+':
-                *flavor = f_append;
+                var->flavor = f_append;
                 break;
               case '?':
-                *flavor = f_conditional;
+                var->flavor = f_conditional;
                 break;
               case '!':
-                *flavor = f_shell;
+                var->flavor = f_shell;
                 break;
               default:
                 /* If we skipped whitespace, non-assignments means no var.  */
@@ -1490,50 +1501,55 @@ parse_variable_definition (const char *p, enum variable_flavor *flavor)
                 /* Might be assignment, or might be $= or #=.  Check.  */
                 continue;
             }
-          return (char *)++p;
+          if (! e)
+            e = p - 1;
+          ++p;
+          break;
         }
-      else if (c == ':')
-        /* A colon other than := is a rule line, not a variable defn.  */
-        return NULL;
+
+      /* Check for POSIX ::= syntax  */
+      if (c == ':')
+        {
+          /* A colon other than :=/::= is not a variable defn.  */
+          if (*p != ':' || p[1] != '=')
+            return NULL;
+
+          /* POSIX allows ::= to be the same as GNU make's := */
+          var->flavor = f_simple;
+          if (! e)
+            e = p - 1;
+          p += 2;
+          break;
+        }
 
       /* If we skipped whitespace, non-assignments means no var.  */
       if (wspace)
         return NULL;
     }
 
+  var->length = e - var->name;
+  var->value = next_token (p);
   return (char *)p;
 }
 
 /* Try to interpret LINE (a null-terminated string) as a variable definition.
 
-   If LINE was recognized as a variable definition, a pointer to its `struct
+   If LINE was recognized as a variable definition, a pointer to its 'struct
    variable' is returned.  If LINE is not a variable definition, NULL is
    returned.  */
 
 struct variable *
 assign_variable_definition (struct variable *v, char *line)
 {
-  char *beg;
-  char *end;
-  enum variable_flavor flavor;
   char *name;
 
-  beg = next_token (line);
-  line = parse_variable_definition (beg, &flavor);
-  if (!line)
+  if (!parse_variable_definition (line, v))
     return NULL;
 
-  end = line - (flavor == f_recursive ? 1 : 2);
-  while (end > beg && isblank ((unsigned char)end[-1]))
-    --end;
-  line = next_token (line);
-  v->value = line;
-  v->flavor = flavor;
-
   /* Expand the name, so "$(foo)bar = baz" works.  */
-  name = alloca (end - beg + 1);
-  memcpy (name, beg, end - beg);
-  name[end - beg] = '\0';
+  name = alloca (v->length + 1);
+  memcpy (name, v->name, v->length);
+  name[v->length] = '\0';
   v->name = allocated_variable_expand (name);
 
   if (v->name[0] == '\0')
@@ -1551,7 +1567,7 @@ assign_variable_definition (struct variable *v, char *line)
 
    See the comments for assign_variable_definition().
 
-   If LINE was recognized as a variable definition, a pointer to its `struct
+   If LINE was recognized as a variable definition, a pointer to its 'struct
    variable' is returned.  If LINE is not a variable definition, NULL is
    returned.  */
 
@@ -1608,7 +1624,7 @@ print_variable (const void *item, void *arg)
       origin = _("command line");
       break;
     case o_override:
-      origin = _("`override' directive");
+      origin = _("'override' directive");
       break;
     case o_invalid:
     default:
@@ -1619,12 +1635,12 @@ print_variable (const void *item, void *arg)
   if (v->private_var)
     fputs (" private", stdout);
   if (v->fileinfo.filenm)
-    printf (_(" (from `%s', line %lu)"),
+    printf (_(" (from '%s', line %lu)"),
             v->fileinfo.filenm, v->fileinfo.lineno);
   putchar ('\n');
   fputs (prefix, stdout);
 
-  /* Is this a `define'?  */
+  /* Is this a 'define'?  */
   if (v->recursive && strchr (v->value, '\n') != 0)
     printf ("define %s\n%s\nendef\n", v->name, v->value);
   else

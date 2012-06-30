@@ -1,7 +1,5 @@
 /* Definitions for managing subprocesses in GNU Make.
-Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
-Foundation, Inc.
+Copyright (C) 1992-2012 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -59,7 +57,7 @@ struct child
     char *sh_batch_file;        /* Script file for shell commands */
     unsigned int remote:1;	/* Nonzero if executing remotely.  */
 
-    unsigned int noerror:1;	/* Nonzero if commands contained a `-'.  */
+    unsigned int noerror:1;	/* Nonzero if commands contained a '-'.  */
 
     unsigned int good_stdin:1;	/* Nonzero if this child has a good stdin.  */
     unsigned int deleted:1;	/* Nonzero if targets have been deleted.  */

@@ -1,7 +1,5 @@
 /* Miscellaneous global declarations and portability cruft for GNU Make.
-Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
-1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010 Free Software Foundation, Inc.
+Copyright (C) 1988-2012 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -68,7 +66,7 @@ char *alloca ();
 #include <ctype.h>
 
 #ifdef HAVE_SYS_TIMEB_H
-/* SCO 3.2 "devsys 4.2" has a prototype for `ftime' in <time.h> that bombs
+/* SCO 3.2 "devsys 4.2" has a prototype for 'ftime' in <time.h> that bombs
    unless <sys/timeb.h> has been included first.  */
 # include <sys/timeb.h>
 #endif
@@ -96,7 +94,7 @@ extern int errno;
 #ifdef  HAVE_UNISTD_H
 # include <unistd.h>
 /* Ultrix's unistd.h always defines _POSIX_VERSION, but you only get
-   POSIX.1 behavior with `cc -YPOSIX', which predefines POSIX itself!  */
+   POSIX.1 behavior with 'cc -YPOSIX', which predefines POSIX itself!  */
 # if defined (_POSIX_VERSION) && !defined (ultrix) && !defined (VMS)
 #  define POSIX 1
 # endif
@@ -201,7 +199,7 @@ unsigned int get_path_max (void);
 # if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__
 #  define __attribute__(x)
 # endif
-/* The __-protected variants of `format' and `printf' attributes
+/* The __-protected variants of 'format' and 'printf' attributes
    are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
 # if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
 #  define __format__ format
@@ -259,6 +257,9 @@ char *strerror (int errnum);
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
 #endif
+#if HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #define FILE_TIMESTAMP uintmax_t
 
 #if !defined(HAVE_STRSIGNAL)
@@ -272,7 +273,7 @@ char *strsignal (int signum);
    - It's typically faster.
    POSIX 1003.2-1992 section 2.5.2.1 page 50 lines 1556-1558 says that
    only '0' through '9' are digits.  Prefer ISDIGIT to isdigit() unless
-   it's important to use the locale's definition of `digit' even when the
+   it's important to use the locale's definition of 'digit' even when the
    host does not conform to POSIX.  */
 #define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
 
@@ -315,11 +316,15 @@ char *strsignal (int signum);
 #define N_(msgid)           gettext_noop (msgid)
 #define S_(msg1,msg2,num)   ngettext (msg1,msg2,num)
 
-/* Handle other OSs.  */
-#ifndef PATH_SEPARATOR_CHAR
-# if defined(HAVE_DOS_PATHS)
-#  define PATH_SEPARATOR_CHAR ';'
-# elif defined(VMS)
+/* Handle other OSs.
+   To overcome an issue parsing paths in a DOS/Windows environment when
+   built in a unix based environment, override the PATH_SEPARATOR_CHAR
+   definition unless being built for Cygwin. */
+#if defined(HAVE_DOS_PATHS) && !defined(__CYGWIN__)
+# undef PATH_SEPARATOR_CHAR
+# define PATH_SEPARATOR_CHAR ';'
+#elif !defined(PATH_SEPARATOR_CHAR)
+# if defined (VMS)
 #  define PATH_SEPARATOR_CHAR ','
 # else
 #  define PATH_SEPARATOR_CHAR ':'
@@ -336,6 +341,7 @@ char *strsignal (int signum);
 # include <malloc.h>
 # define pipe(_p)        _pipe((_p), 512, O_BINARY)
 # define kill(_pid,_sig) w32_kill((_pid),(_sig))
+
 void sync_Path_environment (void);
 int w32_kill (pid_t pid, int sig);
 char *end_of_token_w32 (const char *s, char stopchar);
@@ -363,7 +369,8 @@ struct floc
   };
 #define NILF ((struct floc *)0)
 
-#define STRING_SIZE_TUPLE(_s) (_s), (sizeof (_s)-1)
+#define CSTRLEN(_s) (sizeof (_s)-1)
+#define STRING_SIZE_TUPLE(_s) (_s), CSTRLEN(_s)
 
 
 /* We have to have stdarg.h or varargs.h AND v*printf or doprnt to use
@@ -464,6 +471,10 @@ const char *strcache_add (const char *str);
 const char *strcache_add_len (const char *str, unsigned int len);
 int strcache_setbufsize (unsigned int size);
 
+/* Guile support  */
+int setup_guile (void);
+
+
 #ifdef  HAVE_VFORK_H
 # include <vfork.h>
 #endif
@@ -481,7 +492,7 @@ long int lseek ();
 #endif  /* Not GNU C library or POSIX.  */
 
 #ifdef  HAVE_GETCWD
-# if !defined(VMS) && !defined(__DECC) && !defined(WINDOWS32)
+# if !defined(VMS) && !defined(__DECC)
 char *getcwd ();
 # endif
 #else
@@ -514,9 +525,7 @@ int strncasecmp (const char *s1, const char *s2, int n);
 extern const struct floc *reading_file;
 extern const struct floc **expanding_var;
 
-#if !defined(WINDOWS32)
 extern char **environ;
-#endif
 
 extern int just_print_flag, silent_flag, ignore_errors_flag, keep_going_flag;
 extern int print_data_base_flag, question_flag, touch_flag, always_make_flag;

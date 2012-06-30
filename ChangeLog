@@ -1,10 +1,194 @@
+2012-03-05  Paul Smith  <psmith@gnu.org>
+
+	Update copyright notices to use year ranges, as allowed by
+	clarifications in the GNU Maintainer's Manual.
+
+2012-03-04  Paul Smith  <psmith@gnu.org>
+
+	* read.c (unescape_char): New function to remove escapes from a char.
+	(record_files): Call it on the dependency string to unescape ":".
+	Fixes Savannah bug #12126 and bug #16545.
+
+	* make.h (CSTRLEN): Determine the length of a constant string.
+	* main.c: Use the new macro.
+	* read.c: Ditto.
+	* variable.h: Ditto.
+	* function.c: Simplify checks for function alternatives.
+
+	* expand.c (variable_append): If the current set is local and the
+	next one is not a parent, then treat the next set as
+	local as well.  Fixes Savannah bug #35468.
+
+2012-03-03  Paul Smith  <psmith@gnu.org>
+
+	* acinclude.m4 (AC_STRUCT_ST_MTIM_NSEC): Add support for AIX 5.2+
+	nanosecond timestamps.  Fixes Savannah bug #32485.
+
+	Convert uses of `foo' for quoting to 'foo' to reflect changes in
+	the GNU Coding Standards.  Fixes Savannah bug #34530.
+
+	* job.c (construct_command_argv_internal): In oneshell we need to
+	break the SHELLFLAGS up for argv.  Fixes Savannah bug #35397.
+
+	* function.c (func_filter_filterout): Recompute the length of each
+	filter word in case it was compressed due to escape chars.  Don't
+	reset the string as it's freed.  Fixes Savannah bug #35410.
+
+	* misc.c (collapse_continuations): Only use POSIX-style
+	backslash/newline handling if the .POSIX target is set.
+	Addresses Savannah bug #16670 without backward-incompatibility.
+	* NEWS: Document behavior change.
+	* doc/make.texi (Splitting Lines): New section describing how to
+	use backslash/newline to split long lines.
+
+2012-02-26  Paul Smith  <psmith@gnu.org>
+
+	* implicit.c (pattern_search): Check the stem length to avoid
+	stack overflows in stem_str.  Fixes Savannah bug #35525.
+
+2012-02-03  Eli Zaretskii  <eliz@gnu.org>
+
+	* w32/subproc/sub_proc.c (proc_stdin_thread, proc_stdout_thread)
+	(proc_stderr_thread, process_pipe_io): Ifdef away unused
+	functions.
+
+	* w32/subproc/w32err.c (map_windows32_error_to_string) [_MSC_VER]:
+	Don't use TLS storage for szMessageBuffer.  Ifdef away special
+	code for handling Winsock error codes.  Make the function return a
+	`const char *'.  Suggested by Ozkan Sezer.  Fixes Savannah bug #34832.
+
+2012-01-29  Paul Smith  <psmith@gnu.org>
+
+	* gmk-default.scm (to-string-maybe): Variables map to empty strings.
+	In Guile 2.0, (define ...) results in a variable object so make
+	sure that maps to an empty string in make.
+
+	* variable.c (parse_variable_definition): New POSIX assignment ::=
+	Take a struct variable to return more information after parsing.
+	(assign_variable_definition): New parse_variable_definition() call.
+	* variable.h: New declaration of parse_variable_definition().
+	* read.c (do_define): New parse_variable_definition() call.
+	(parse_var_assignment): Ditto.
+	(get_next_mword): Parse ::= as a variable assignment.
+	* doc/make.texi (Flavors): Describe the new ::= syntax.
+	* NEWS: Mention the ::= operator.
+
+	* variable.h (struct variable): Rearrange elts to reduce struct size.
+
+	* function.c (func_file): Create a new function, $(file ...)
+	* doc/make.texi (File Function): Document the $(file ..) function.
+	* NEWS: Announce it.
+
+	* gmk-default.scm (to-string-maybe): Use a more portable way to
+	test for unprintable characters.
+	* configure.in [GUILE]: Guile 1.6 doesn't have pkg-config
+	* build_w32.bat: Ditto.
+
+2012-01-28  Eli Zaretskii  <eliz@gnu.org>
+
+	* config.h.W32.template: Update from config.h.in.
+
+	Support a Windows build with Guile.
+
+	* README.W32.template: Update with instructions for building with
+	Guile.
+
+	* build_w32.bat: Support building with Guile.
+
+	* make.h [HAVE_STDINT_H]: Include stdint.h.
+
+	* main.c (main, clean_jobserver): Move declarations of variables
+	not used in the WINDOWS32 build to the #else branch, to avoid
+	compiler warnings.
+
+	Fix failures on MS-Windows when Make's standard handles are invalid.
+	This can happen when Make is invoked from a GUI application.
+
+	* w32/subproc/sub_proc.c (process_init_fd): Don't dereference
+	pproc if it is a NULL pointer.
+	(process_begin, process_cleanup): Don't try to close pipe handles
+	whose value is INVALID_HANDLE_VALUE.
+	(process_easy): Initialize hIn, hOut, and hErr to
+	INVALID_HANDLE_VALUE.  If DuplicateHandle fails with
+	ERROR_INVALID_HANDLE, duplicate a handle for the null device
+	instead of STD_INPUT_HANDLE, STD_OUTPUT_HANDLE or
+	STD_ERROR_HANDLE.  Don't try to close pipe handles whose value is
+	INVALID_HANDLE_VALUE.
+
+	* function.c (windows32_openpipe): Initialize hIn and hErr to
+	INVALID_HANDLE_VALUE.  If DuplicateHandle fails with
+	ERROR_INVALID_HANDLE, duplicate a handle for the null device
+	instead of STD_INPUT_HANDLE or STD_ERROR_HANDLE.  Fix indentation.
+	Don't try to close handles whose value is INVALID_HANDLE_VALUE.
+
+2012-01-25  Eli Zaretskii  <eliz@gnu.org>
+
+	* function.c (define_new_function): Fix format strings in calls to
+	`fatal'.
+
+2012-01-17  Paul Smith  <psmith@gnu.org>
+
+	* guile.c (func_guile): Handle NULL returns from Guile.
+
+2012-01-16  Paul Smith  <psmith@gnu.org>
+
+	* make.h (PATH_SEPARATOR_CHAR): Allow resetting for crosscompiling
+	for Windows.  Patch by Chris Sutcliffe <ir0nh34d@gmail.com>
+	Fixes Savannah bug #34818.
+
+2012-01-15  Paul Smith  <psmith@gnu.org>
+
+	* variable.h: Prototype an interface for defining new make functions.
+	* function.c (define_new_function): Define it.
+	(func_guile): Remove the "guile" function.
+	(function_table_init): Ditto.
+	* guile.c (func_guile): Add the "guile" function here.
+	(setup_guile): Call define_new_function() to define it.
+	(guile_eval_string): Obsolete.
+
+	* all: Update copyright notices.
+
+2012-01-12  Paul Smith  <psmith@gnu.org>
+
+	Support GNU Guile as an embedded extension language for GNU make.
+
+	* NEWS: Note the new Guile capability.
+	* Makefile.am (EXTRA_DIST, make_SOURCES): Add new guile source files.
+	(AM_CFLAGS): Add Guile compiler flags.
+	(guile): Add a rule for converting default SCM into a C header.
+	* configure.in: Add support for --with-guile.
+	Also, convert the entire file to properly escaped autoconf m4, and
+	utilize newer features such as AS_IF() and AS_CASE().
+	* doc/make.texi (Guile Function): Document the GNU guile integration.
+	* make.h (guile_eval_string, guile_boot): Prototypes for Guile.
+	* main.c (main): Run guile_boot() to handle main().
+	(real_main): All the previous content of main() is here.
+	(real_main): Add "guile" to the .FEATURES variable.
+	* function.c (func_guile): Call Guile.
+	* guile.c: New file implementing GNU make integration with GNU Guile.
+	* gmk-default.scm: The integration of GNU make with Guile uses
+	Guile itself for much of the parsing and conversion of return
+	types, etc.  This implementation is embedded into GNU make.
+	* config.h-vms.template: Disable Guile support.
+	* config.h.W32.template: Ditto.
+	* configh.dos.template: Ditto.
+	* config.ami.template: Ditto.
+	* makefile.vms: Add new Guile files.
+	* Makefile.DOS.template: Ditto.
+	* Makefile.ami: Ditto.
+	* NMakefile.template: Ditto.
+	* SMakefile.template: Ditto.
+	* build_w32.bat: Ditto.
+	* dosbuild.bat: Ditto.
+	* make_msvc_net2001.vcproj: Ditto.
+
 2011-11-15  Paul Smith  <psmith@gnu.org>
 
 	* main.c (main): Use %ld when printing DWORD values.
 	* job.c (new_job): Ditto.
 	* w32/include/sub_proc.h: Use const.
 	* w32/subproc/sub_proc.c (open_jobserver_semaphore): Use const.
-	Fixes Savannah bug #34830.  Patches suggested by Ozkan Sezer.
+	Fixes Savannah bug #34830.  Changes suggested by Ozkan Sezer.
 
 	* configure.in (MAKE_JOBSERVER): Enable jobserver on W32 systems.
 	* config.h.W32.template (MAKE_JOBSERVER): Ditto.
@@ -4303,8 +4487,7 @@ See ChangeLog.2, available in the CVS repository at:
 for earlier changes.
 
 
-Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free
-Software Foundation, Inc.
+Copyright (C) 2000-2012 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the

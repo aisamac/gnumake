@@ -861,7 +861,9 @@ msdos_return_to_initial_directory (void)
 }
 #endif  /* __MSDOS__ */
 
+#if !defined(_MSC_VER)
 char *mktemp (char *template);
+#endif
 int mkstemp (char *template);
 
 FILE *
